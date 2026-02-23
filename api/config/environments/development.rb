@@ -18,13 +18,15 @@ Rails.application.configure do
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.
   if Rails.root.join("tmp/caching-dev.txt").exist?
+    config.action_controller.perform_caching = true
+    config.action_controller.enable_fragment_cache_logging = true
     config.public_file_server.headers = { "cache-control" => "public, max-age=#{2.days.to_i}" }
   else
     config.action_controller.perform_caching = false
   end
 
-  # Change to :null_store to avoid any caching.
-  config.cache_store = :memory_store
+  # Usar Solid Cache en lugar de Memory Store
+  config.cache_store = :solid_cache_store
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
@@ -50,8 +52,9 @@ Rails.application.configure do
   # Append comments with runtime information tags to SQL queries in logs.
   config.active_record.query_log_tags_enabled = true
 
-  # Highlight code that enqueued background job in logs.
-  config.active_job.verbose_enqueue_logs = true
+  # Use Solid Queue instead of active_job queue_adapter async
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
 
   # Highlight code that triggered redirect in logs.
   config.action_dispatch.verbose_redirect_logs = true

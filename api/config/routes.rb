@@ -1,10 +1,31 @@
 Rails.application.routes.draw do
-  # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
-
-  # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
-  # Can be used by load balancers and uptime monitors to verify that the app is live.
+  # Health check
   get "up" => "rails/health#show", as: :rails_health_check
 
-  # Defines the root path route ("/")
-  # root "posts#index"
+  # ActionCable
+  mount ActionCable.server => "/cable"
+
+  # API v1
+  namespace :api do
+    namespace :v1 do
+      # Auth
+      post "auth/register", to: "auth#register"
+      post "auth/login",    to: "auth#login"
+      get  "auth/me",       to: "auth#me"
+
+      # Credit Applications
+      resources :credit_applications, only: [ :index, :show, :create ] do
+        collection do
+          get :countries
+          get :statuses
+        end
+        member do
+          patch :status, to: "credit_applications#update_status"
+        end
+      end
+
+      # Webhooks (sin autenticación JWT, con secret propio)
+      post "webhooks/bank_update", to: "webhooks#bank_update"
+    end
+  end
 end
