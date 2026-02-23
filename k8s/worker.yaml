@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: worker
+  labels:
+    app: worker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template:
+    metadata:
+      labels:
+        app: worker
+    spec:
+      containers:
+      - name: solid-queue
+        image: fintech-api:latest
+        command: ["bin/jobs"]
+        env:
+        - name: DATABASE_URL
+          value: "postgres://postgres:postgres_password@postgres:5432/fintech_globaltask_api_production"
+        - name: RAILS_ENV
+          value: "production"
+        - name: RAILS_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: rails-secrets
+              key: master-key
