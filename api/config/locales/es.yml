@@ -1,0 +1,19 @@
+es:
+  activerecord:
+    attributes:
+      credit_application:
+        status: "Estado"
+        country: "País"
+        full_name: "Nombre completo"
+        identity_document: "Documento de identidad"
+        requested_amount: "Monto solicitado"
+        monthly_income: "Ingreso mensual"
+    models:
+      credit_application: "Solicitud de Crédito"
+  credit_applications:
+    statuses:
+      pending: "Pendiente"
+      approved: "Aprobado"
+      rejected: "Rechazado"
+      manual_review: "Revisión Manual"
+      under_review: "En Revisión"
