@@ -1,0 +1,103 @@
+<div class="form-layout">
+    <div class="header-actions">
+        <a routerLink="/applications" class="back-link"><ion-icon name="arrow-back-outline"></ion-icon> Volver al
+            Listado</a>
+    </div>
+
+    <div class="form-container">
+        <div class="form-header">
+            <div class="icon-circle"><ion-icon name="create-outline"></ion-icon></div>
+            <h1>Nueva Solicitud de Crédito</h1>
+            <p>Completa los datos solicitados. Nuestro sistema evaluará la aplicación en base a las regulaciones
+                financieras del país seleccionado.</p>
+        </div>
+
+        @if (error()) {
+        <div class="alert alert-error">
+            {{ error() }}
+        </div>
+        }
+
+        @if (success()) {
+        <div class="alert alert-success">
+            {{ success() }}
+            <p class="small-text">Redirigiendo al dashboard...</p>
+        </div>
+        }
+
+        <form [formGroup]="applicationForm" (ngSubmit)="onSubmit()" [class.form-disabled]="loading() || success()">
+
+            <!-- Sección principal -->
+            <div class="form-section">
+                <h3><ion-icon name="person-circle-outline"></ion-icon> 1. Información Personal</h3>
+                <div class="form-grid">
+
+                    <div class="field col-full">
+                        <label for="fullName">Nombre Completo</label>
+                        <input id="fullName" type="text" formControlName="full_name" placeholder="Ej. Juan Pérez" />
+                    </div>
+
+                    <div class="field">
+                        <label for="country">País de Residencia</label>
+                        <div class="select-wrapper">
+                            <select id="country" formControlName="country">
+                                @for (c of countries(); track c.code) {
+                                <option [value]="c.code">{{ c.name }} ({{ c.code }})</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="identityDoc">Documento de Identidad</label>
+                        <input id="identityDoc" type="text" formControlName="identity_document"
+                            placeholder="Ingresa tu documento" />
+                        <span class="help-text">Formato esperado: {{ getCountryHelpText() }}</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sección Finanzas -->
+            <div class="form-section">
+                <h3><ion-icon name="cash-outline"></ion-icon> 2. Datos Financieros</h3>
+                <div class="form-grid">
+
+                    <div class="field">
+                        <label for="requestedAmount">Monto Solicitado</label>
+                        <div class="input-with-prefix">
+                            <span class="prefix">$</span>
+                            <input id="requestedAmount" type="text" formControlName="requested_amount"
+                                placeholder="Ej. 10,000" />
+                        </div>
+                    </div>
+
+                    <div class="field">
+                        <label for="monthlyIncome">Ingreso Mensual Comprobable</label>
+                        <div class="input-with-prefix">
+                            <span class="prefix">$</span>
+                            <input id="monthlyIncome" type="text" formControlName="monthly_income"
+                                placeholder="Ej. 3,500" />
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-secondary" routerLink="/applications">
+                    <ion-icon name="close-circle-outline"></ion-icon> Cancelar
+                </button>
+                <button type="submit" class="btn-primary"
+                    [disabled]="applicationForm.invalid || loading() || success()">
+                    @if (loading()) {
+                    <span class="spinner-small"></span> Procesando...
+                    } @else {
+                    <ion-icon name="send-outline"></ion-icon> Enviar Solicitud
+                    }
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>

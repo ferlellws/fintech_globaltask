@@ -1,0 +1,143 @@
+.detail-layout {
+    padding: 3rem 1rem;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+.detail-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.detail-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-color);
+}
+
+.header-info h1 {
+    margin: 0;
+    font-size: 1.75rem;
+}
+
+.header-info .date {
+    color: var(--text-muted);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.detail-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-color);
+}
+
+.detail-card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row .label {
+    color: var(--text-muted);
+}
+
+.info-row .value {
+    font-weight: 600;
+}
+
+.banking-card {
+    grid-column: span 2;
+}
+
+.banking-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.banking-item {
+    background: #f8fafc;
+    padding: 1rem;
+    border-radius: 12px;
+}
+
+.banking-item .label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.banking-item .value {
+    font-weight: 600;
+}
+
+.audit-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+}
+
+.timeline {
+    border-left: 2px solid #eff6ff;
+    padding-left: 1.5rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -1.95rem;
+    top: 0.25rem;
+    width: 12px;
+    height: 12px;
+    background: var(--primary);
+    border-radius: 50%;
+}
+
+.timeline-content .time {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}

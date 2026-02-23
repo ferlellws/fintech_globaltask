@@ -1,0 +1,109 @@
+<div class="detail-layout animate-fade">
+    <div class="header-actions">
+        <a routerLink="/applications" class="back-link"><ion-icon name="arrow-back-outline"></ion-icon> Volver al
+            Listado</a>
+    </div>
+
+    @if (loading()) {
+    <div class="center-content">
+        <div class="spinner"></div>
+        <p>Cargando detalles...</p>
+    </div>
+    } @else if (error()) {
+    <div class="alert alert-error">{{ error() }}</div>
+    } @else if (app()) {
+    <!-- Panel Principal -->
+    <div class="detail-container">
+
+        <!-- Cabecera de la Aplicación -->
+        <div class="detail-header">
+            <div class="header-info">
+                <h1>Solicitud #{{ app()?.id }}</h1>
+                <p class="date">Creada el {{ app()?.created_at | date:'medium' }}</p>
+            </div>
+            <div class="status-container">
+                <span class="status-badge" [ngClass]="getStatusClass(app()?.status || '')">
+                    {{ app()?.status_name || (app()?.status | uppercase) }}
+                </span>
+                <p class="live-indicator"><span class="dot pulse"></span> Escuchando cambios...</p>
+            </div>
+        </div>
+
+        <div class="detail-grid">
+            <!-- Columna Izquierda: Datos del Solicitante -->
+            <div class="detail-card">
+                <h2><ion-icon name="person-outline"></ion-icon> Datos del Solicitante</h2>
+
+                <div class="info-row">
+                    <span class="label">Nombre:</span>
+                    <span class="value">{{ app()?.full_name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Documento:</span>
+                    <span class="value">{{ app()?.identity_document }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">País:</span>
+                    <span class="value badge badge-outline">{{ app()?.country_name }} ({{ app()?.country }})</span>
+                </div>
+            </div>
+
+            <!-- Columna Derecha: Datos Financieros -->
+            <div class="detail-card">
+                <h2><ion-icon name="cash-outline"></ion-icon> Datos Financieros</h2>
+
+                <div class="info-row">
+                    <span class="label">Monto Solicitado:</span>
+                    <span class="value amount">{{ formatCurrency(app()?.requested_amount || 0) }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Ingreso Mensual:</span>
+                    <span class="value">{{ formatCurrency(app()?.monthly_income || 0) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Bancaria -->
+        <div class="detail-card banking-card">
+            <h2><ion-icon name="business-outline"></ion-icon> Información Bancaria Obtenida</h2>
+            @if (app()?.banking_information) {
+            <div class="banking-grid">
+                @for (key of objectKeys(app()?.banking_information); track key) {
+                <div class="banking-item">
+                    <span class="label">{{ key | uppercase }}</span>
+                    <span class="value">{{ app()!.banking_information[key] }}</span>
+                </div>
+                }
+            </div>
+            } @else {
+            <p class="empty-text">Aún no se ha recopilado información bancaria para esta solicitud.</p>
+            }
+        </div>
+
+        <!-- Logs de Auditoría (WebSockets + BD) -->
+        <div class="audit-card">
+            <h2><ion-icon name="time-outline"></ion-icon> Historial de Auditoría</h2>
+
+            @if (app()?.audit_logs && app()!.audit_logs!.length > 0) {
+            <div class="timeline">
+                @for (log of app()?.audit_logs; track log.changed_at) {
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <span class="time">{{ log.changed_at | date:'shortTime' }}</span>
+                        <p>Estado cambiado de <strong>{{ log.old_status_name || log.old_status || 'N/A' }}</strong> a
+                            <strong [ngClass]="getStatusClass(log.new_status || '')">{{ log.new_status_name ||
+                                log.new_status }}</strong>
+                        </p>
+                    </div>
+                </div>
+                }
+            </div>
+            } @else {
+            <p class="empty-text">No hay registros de auditoría almacenados todavía.</p>
+            }
+        </div>
+
+    </div>
+    }
+</div>

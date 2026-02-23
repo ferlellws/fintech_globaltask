@@ -1,0 +1,146 @@
+<div class="dashboard-layout animate-fade">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="logo-icon"><ion-icon name="card-outline"></ion-icon></div>
+            <h2>GlobalTask</h2>
+        </div>
+        <nav class="nav-links">
+            <a routerLink="/applications" class="active"><ion-icon name="list-outline" class="icon"></ion-icon>
+                Solicitudes</a>
+        </nav>
+        <div class="user-profile">
+            <div class="avatar">{{ auth.currentUser()?.email?.charAt(0)?.toUpperCase() }}</div>
+            <div class="user-info">
+                <span class="email">{{ auth.currentUser()?.email }}</span>
+            </div>
+            <button class="logout-btn" (click)="logout()" title="Cerrar sesión">
+                <ion-icon name="log-out-outline"></ion-icon>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="top-bar">
+            <div>
+                <h1>Solicitudes de Crédito</h1>
+                <p class="subtitle"><span class="dot pulse"></span> Sistema Operativo en Tiempo Real</p>
+            </div>
+            <button class="btn-primary" routerLink="/applications/new">
+                <ion-icon name="add-outline"></ion-icon> Nueva Solicitud
+            </button>
+        </header>
+
+        <!-- Filtros -->
+        <div class="filters-bar">
+            <div class="filter-group">
+                <label for="countryFilter">País:</label>
+                <select id="countryFilter" [(ngModel)]="filterCountry" (change)="onFilterChange()">
+                    <option value="">Todos los países</option>
+                    @for (c of countries(); track c.code) {
+                    <option [value]="c.code">{{ c.name }}</option>
+                    }
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="statusFilter">Estado:</label>
+                <select id="statusFilter" [(ngModel)]="filterStatus" (change)="onFilterChange()">
+                    <option value="">Todos los estados</option>
+                    @for (s of statuses(); track s.code) {
+                    <option [value]="s.code">{{ s.name }}</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Cards Section (Stats) -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3><ion-icon name="pie-chart-outline"></ion-icon> Total Solicitudes</h3>
+                <p class="stat-value">{{ applications().length }}</p>
+            </div>
+            <div class="stat-card">
+                <h3><ion-icon name="alert-circle-outline"></ion-icon> Pendientes</h3>
+                <p class="stat-value text-warning">
+                    {{ pendingCount }}
+                </p>
+            </div>
+            <div class="stat-card">
+                <h3><ion-icon name="checkmark-done-circle-outline"></ion-icon> Aprobadas</h3>
+                <p class="stat-value text-success">
+                    {{ approvedCount }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-container">
+            @if (loading()) {
+            <div class="empty-state-container">
+                <div class="spinner-small" style="font-size: 2rem; color: var(--primary); margin-bottom: 1rem;"></div>
+                <p>Cargando información...</p>
+            </div>
+            } @else if (applications().length === 0) {
+            <div class="empty-state-container empty-state-beautiful">
+                <div class="empty-icon-wrapper">
+                    <ion-icon name="document-text-outline"></ion-icon>
+                </div>
+                <h3>No hay solicitudes aún</h3>
+                <p>Crea la primera solicitud de crédito para empezar a operar.</p>
+                <button class="btn-primary" routerLink="/applications/new">
+                    <ion-icon name="add-outline"></ion-icon> Crear Solicitud
+                </button>
+            </div>
+            } @else {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Solicitante</th>
+                        <th>País</th>
+                        <th>Monto</th>
+                        <th>Fecha</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (app of applications(); track app.id) {
+                    <tr class="table-row">
+                        <td>#{{ app.id }}</td>
+                        <td>
+                            <div class="user-info">
+                                <span class="user-name">{{ app.full_name }}</span>
+                                <span class="user-doc">{{ app.identity_document }}</span>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-outline">{{ app.country_name || app.country }}</span></td>
+                        <td class="amount">{{ formatCurrency(app.requested_amount) }}</td>
+                        <td>{{ app.created_at | date:'shortDate' }}</td>
+                        <td>
+                            <span class="status-badge" [ngClass]="getStatusClass(app.status)">
+                                {{ app.status_name || (app.status | uppercase) }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon" title="Ver Detalles" [routerLink]="['/applications', app.id]">
+                                    <ion-icon name="eye-outline"></ion-icon>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    } @empty {
+                    <tr>
+                        <td colspan="7" class="empty-state">No se encontraron solicitudes con los filtros actuales.</td>
+                    </tr>
+                    }
+                </tbody>
+            </table>
+            }
+        </div>
+
+
+    </main>
+</div>
