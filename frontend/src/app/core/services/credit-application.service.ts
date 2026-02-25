@@ -28,7 +28,20 @@ export interface CreditApplication {
 
 export interface ApplicationsResponse {
     data: CreditApplication[];
-    meta: { total: number; page: number; per_page: number; pages: number };
+    meta: {
+        total: number;
+        page: number;
+        per_page: number;
+        pages: number;
+        global_stats: {
+            total: number;
+            pending: number;
+            approved: number;
+            rejected: number;
+            manual_review: number;
+            total_amount: number;
+        };
+    };
 }
 
 export interface CreateApplicationDto {

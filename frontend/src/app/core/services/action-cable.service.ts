@@ -7,9 +7,11 @@ export interface CableMessage {
     type: string;
     id: number;
     status: string;
+    status_name?: string;
     country: string;
     full_name: string;
     updated_at: string;
+    banking_information?: Record<string, any>;
     audit_logs?: any[];
 }
 
@@ -31,21 +33,28 @@ export class ActionCableService implements OnDestroy {
         this.ws = new WebSocket(url);
 
         this.ws.onopen = () => {
+            console.log('ActionCable connection opened');
             // Suscribirse al canal CreditApplicationChannel
             this.ws!.send(JSON.stringify({
                 command: 'subscribe',
                 identifier: JSON.stringify({ channel: 'CreditApplicationChannel' })
             }));
+            console.log('ActionCable subscription sent');
         };
 
         this.ws.onmessage = (event) => {
+            console.log('ActionCable received raw:', event.data);
             try {
                 const data = JSON.parse(event.data);
                 if (data.type === 'ping' || data.type === 'welcome' || data.type === 'confirm_subscription') return;
-                if (data.message?.type === 'status_changed') {
+                console.log('ActionCable message parsed:', data);
+                if (data.message?.type === 'status_changed' || data.message?.type === 'application_created') {
+                    console.log('ActionCable trigger:', data.message.type, data.message);
                     this.statusChanges$.next(data.message as CableMessage);
                 }
-            } catch { }
+            } catch (err) {
+                console.error('ActionCable parse error:', err);
+            }
         };
 
         this.ws.onerror = (err) => console.error('ActionCable error:', err);
