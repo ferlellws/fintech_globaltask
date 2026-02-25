@@ -7,6 +7,9 @@ class RiskEvaluationJob < ApplicationJob
     # Solo procesar si está en estado pendiente
     return unless application.status == "pending"
 
+    # Dar tiempo para la demostración (ver estado Pendiente en el Dashboard)
+    sleep(4)
+
     # Obtener información bancaria mock
     banking_info = BankingIntegrationService.fetch(application)
     application.banking_information = banking_info
