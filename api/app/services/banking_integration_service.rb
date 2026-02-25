@@ -41,11 +41,11 @@ class BankingIntegrationService
     },
     "MX" => ->(app) {
       {
-        provider: "Buró de Crédito México Mock",
+        provider: "Central de Riesgo México Mock",
         account_verified: true,
         clabe: "#{rand(10**18..10**19 - 1)}",
         curp_valid: true,
-        score_buro: rand(400..850),
+        score_buro_mexico: rand(400..850),
         monthly_credit_obligations: (app.monthly_income * rand(0.1..0.3)).to_f.round(2),
         currency: "MXN",
         checked_at: Time.current.iso8601
@@ -81,9 +81,6 @@ class BankingIntegrationService
     country = credit_application.country.to_s.upcase
     mock_fn = MOCK_RESPONSES[country]
     return { error: "No hay integración bancaria para el país: #{country}" } unless mock_fn
-
-    # Simular latencia de red (en tests puede deshabilitarse)
-    sleep(0.01) unless Rails.env.test?
 
     mock_fn.call(credit_application)
   rescue => e

@@ -31,7 +31,7 @@ module Countries
       elsif mock_monthly_debt > income * 0.35
         manual_review!
       else
-        pending!
+        approve!
       end
     end
   end

@@ -30,7 +30,7 @@ module Countries
       elsif estimated_payment > max_allowed * 0.8
         manual_review!
       else
-        pending!
+        approve!
       end
     end
   end

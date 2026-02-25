@@ -27,7 +27,7 @@ module Countries
       if application.requested_amount > MANUAL_REVIEW_THRESHOLD
         manual_review!
       else
-        pending!
+        approve!
       end
     end
   end

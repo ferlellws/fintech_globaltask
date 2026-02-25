@@ -26,7 +26,7 @@ module Countries
       application.banking_information = application.banking_information.merge("financial_score" => score)
 
       if score >= MIN_SCORE_APPROVE
-        pending!
+        approve!
       elsif score >= MIN_SCORE_REVIEW
         manual_review!
       else

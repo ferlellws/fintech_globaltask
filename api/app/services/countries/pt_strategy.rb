@@ -3,6 +3,7 @@ module Countries
   class PtStrategy < BaseStrategy
     NIF_REGEXP = /\A\d{9}\z/
     INCOME_RATIO_MIN = 0.10
+    MODULO_BASE = 11
 
     def validate_document
       doc = application.identity_document.to_s.strip
@@ -28,7 +29,7 @@ module Countries
         add_error("Portugal: El ingreso mensual debe ser al menos el 10% del monto solicitado (mínimo: #{(amount * INCOME_RATIO_MIN).round(2)})")
         reject!
       else
-        pending!
+        approve!
       end
     end
 
@@ -37,8 +38,8 @@ module Countries
     def valid_nif_checksum?(nif)
       digits = nif.chars.map(&:to_i)
       sum = digits[0..7].each_with_index.sum { |d, i| d * (9 - i) }
-      remainder = sum % 11
-      check_digit = remainder < 2 ? 0 : 11 - remainder
+      remainder = sum % MODULO_BASE
+      check_digit = remainder < 2 ? 0 : MODULO_BASE - remainder
       check_digit == digits[8]
     end
   end

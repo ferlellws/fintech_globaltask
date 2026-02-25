@@ -20,7 +20,7 @@ module Countries
       projected_income = income * STABILITY_MONTHS
 
       if projected_income >= amount
-        pending!
+        approve!
       elsif projected_income >= amount * 0.7
         manual_review!
       else
