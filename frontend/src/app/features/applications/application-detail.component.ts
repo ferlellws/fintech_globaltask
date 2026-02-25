@@ -16,6 +16,7 @@ export class ApplicationDetailComponent implements OnInit {
     app = signal<CreditApplication | null>(null);
     loading = signal(true);
     error = signal('');
+    updating = signal(false);
 
     constructor(
         private route: ActivatedRoute,
@@ -36,7 +37,9 @@ export class ApplicationDetailComponent implements OnInit {
                         return {
                             ...current,
                             status: update.status,
+                            status_name: update.status_name || current.status_name,
                             updated_at: update.updated_at,
+                            banking_information: update.banking_information || current.banking_information,
                             audit_logs: update.audit_logs || current.audit_logs
                         };
                     });
@@ -57,6 +60,23 @@ export class ApplicationDetailComponent implements OnInit {
             error: (err) => {
                 this.error.set('Error al cargar la solicitud');
                 this.loading.set(false);
+            }
+        });
+    }
+
+    updateStatus(newStatus: string) {
+        const id = this.app()?.id;
+        if (!id) return;
+
+        this.updating.set(true);
+        this.api.updateStatus(id, newStatus).subscribe({
+            next: (res) => {
+                this.app.set(res.data);
+                this.updating.set(false);
+            },
+            error: (err) => {
+                console.error(err);
+                this.updating.set(false);
             }
         });
     }

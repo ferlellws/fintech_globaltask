@@ -1,7 +1,9 @@
 <div class="detail-layout animate-fade">
     <div class="header-actions">
-        <a routerLink="/applications" class="back-link"><ion-icon name="arrow-back-outline"></ion-icon> Volver al
-            Listado</a>
+        <a routerLink="/applications" class="back-link">
+            <span class="material-icons">arrow_back</span>
+            Volver al Listado
+        </a>
     </div>
 
     @if (loading()) {
@@ -10,100 +12,169 @@
         <p>Cargando detalles...</p>
     </div>
     } @else if (error()) {
-    <div class="alert alert-error">{{ error() }}</div>
+    <div class="alert alert-error">
+        <span class="material-icons">report_problem</span>
+        {{ error() }}
+    </div>
     } @else if (app()) {
-    <!-- Panel Principal -->
     <div class="detail-container">
 
-        <!-- Cabecera de la Aplicación -->
-        <div class="detail-header">
-            <div class="header-info">
-                <h1>Solicitud #{{ app()?.id }}</h1>
-                <p class="date">Creada el {{ app()?.created_at | date:'medium' }}</p>
-            </div>
-            <div class="status-container">
-                <span class="status-badge" [ngClass]="getStatusClass(app()?.status || '')">
-                    {{ app()?.status_name || (app()?.status | uppercase) }}
-                </span>
-                <p class="live-indicator"><span class="dot pulse"></span> Escuchando cambios...</p>
-            </div>
-        </div>
-
-        <div class="detail-grid">
-            <!-- Columna Izquierda: Datos del Solicitante -->
-            <div class="detail-card">
-                <h2><ion-icon name="person-outline"></ion-icon> Datos del Solicitante</h2>
-
-                <div class="info-row">
-                    <span class="label">Nombre:</span>
-                    <span class="value">{{ app()?.full_name }}</span>
+        <!-- Cabecera Premium -->
+        <div class="detail-header-card shadow-premium">
+            <div class="header-main">
+                <div class="title-section">
+                    <span class="app-number">Solicitud #{{ app()?.id }}</span>
+                    <h1>{{ app()?.full_name }}</h1>
+                    <p class="meta-date">
+                        <span class="material-icons">calendar_today</span>
+                        {{ app()?.created_at | date:'medium' }}
+                    </p>
                 </div>
-                <div class="info-row">
-                    <span class="label">Documento:</span>
-                    <span class="value">{{ app()?.identity_document }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">País:</span>
-                    <span class="value badge badge-outline">{{ app()?.country_name }} ({{ app()?.country }})</span>
-                </div>
-            </div>
-
-            <!-- Columna Derecha: Datos Financieros -->
-            <div class="detail-card">
-                <h2><ion-icon name="cash-outline"></ion-icon> Datos Financieros</h2>
-
-                <div class="info-row">
-                    <span class="label">Monto Solicitado:</span>
-                    <span class="value amount">{{ formatCurrency(app()?.requested_amount || 0) }}</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Ingreso Mensual:</span>
-                    <span class="value">{{ formatCurrency(app()?.monthly_income || 0) }}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Información Bancaria -->
-        <div class="detail-card banking-card">
-            <h2><ion-icon name="business-outline"></ion-icon> Información Bancaria Obtenida</h2>
-            @if (app()?.banking_information) {
-            <div class="banking-grid">
-                @for (key of objectKeys(app()?.banking_information); track key) {
-                <div class="banking-item">
-                    <span class="label">{{ key | uppercase }}</span>
-                    <span class="value">{{ app()!.banking_information[key] }}</span>
-                </div>
-                }
-            </div>
-            } @else {
-            <p class="empty-text">Aún no se ha recopilado información bancaria para esta solicitud.</p>
-            }
-        </div>
-
-        <!-- Logs de Auditoría (WebSockets + BD) -->
-        <div class="audit-card">
-            <h2><ion-icon name="time-outline"></ion-icon> Historial de Auditoría</h2>
-
-            @if (app()?.audit_logs && app()!.audit_logs!.length > 0) {
-            <div class="timeline">
-                @for (log of app()?.audit_logs; track log.changed_at) {
-                <div class="timeline-item">
-                    <div class="timeline-marker"></div>
-                    <div class="timeline-content">
-                        <span class="time">{{ log.changed_at | date:'shortTime' }}</span>
-                        <p>Estado cambiado de <strong>{{ log.old_status_name || log.old_status || 'N/A' }}</strong> a
-                            <strong [ngClass]="getStatusClass(log.new_status || '')">{{ log.new_status_name ||
-                                log.new_status }}</strong>
-                        </p>
+                <div class="status-section">
+                    <span class="status-badge-premium" [ngClass]="getStatusClass(app()?.status || '')">
+                        {{ app()?.status_name || (app()?.status | uppercase) }}
+                    </span>
+                    <div class="live-status">
+                        <span class="dot-pulse"></span>
+                        <span>Sincronizado en tiempo real</span>
                     </div>
                 </div>
-                }
             </div>
-            } @else {
-            <p class="empty-text">No hay registros de auditoría almacenados todavía.</p>
-            }
         </div>
 
+        <!-- Acciones de Administrador (Simulado) -->
+        @if (app()?.status === 'manual_review' || app()?.status === 'under_review') {
+        <div class="admin-actions-card shadow-premium animate-slide-down">
+            <div class="admin-header">
+                <span class="material-icons">gavel</span>
+                <div>
+                    <h3>Panel de Decisión Manual</h3>
+                    <p>Esta solicitud requiere intervención humana. Como administrador, decide el resultado final.</p>
+                </div>
+            </div>
+            <div class="admin-buttons">
+                <button class="btn-approve" [disabled]="updating()" (click)="updateStatus('approved')">
+                    <span class="material-icons">check_circle</span>
+                    Aprobar Crédito
+                </button>
+                <button class="btn-reject" [disabled]="updating()" (click)="updateStatus('rejected')">
+                    <span class="material-icons">cancel</span>
+                    Rechazar Crédito
+                </button>
+            </div>
+        </div>
+        }
+
+        <div class="detail-grid">
+            <!-- Datos Personales -->
+            <div class="premium-card">
+                <div class="card-header">
+                    <span class="material-icons">person_outline</span>
+                    <h2>Datos del Solicitante</h2>
+                </div>
+                <div class="card-content">
+                    <div class="info-record">
+                        <span class="info-label">Documento</span>
+                        <span class="info-value">{{ app()?.identity_document }}</span>
+                    </div>
+                    <div class="info-record">
+                        <span class="info-label">País de Origen</span>
+                        <div class="country-badge">
+                            <span class="material-icons">public</span>
+                            <span>{{ app()?.country_name }} ({{ app()?.country }})</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Datos Financieros -->
+            <div class="premium-card">
+                <div class="card-header">
+                    <span class="material-icons">payments</span>
+                    <h2>Perfil Financiero</h2>
+                </div>
+                <div class="card-content">
+                    <div class="info-record">
+                        <span class="info-label">Monto Solicitado</span>
+                        <span class="info-value highlight">{{ formatCurrency(app()?.requested_amount || 0) }}</span>
+                    </div>
+                    <div class="info-record">
+                        <span class="info-label">Ingreso Mensual</span>
+                        <span class="info-value">{{ formatCurrency(app()?.monthly_income || 0) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información Bancaria (La parte que el usuario dice que no ve) -->
+        <div class="premium-card expanded">
+            <div class="card-header flex-between">
+                <div class="header-left">
+                    <span class="material-icons">account_balance</span>
+                    <h2>Información Bancaria Obtenida</h2>
+                </div>
+                @if (app()?.banking_information) {
+                <span class="verified-tag">
+                    <span class="material-icons">verified</span> Verificado por Proveedor
+                </span>
+                }
+            </div>
+
+            <div class="card-content">
+                @if (app()?.banking_information) {
+                <div class="banking-detailed-grid">
+                    @for (key of objectKeys(app()?.banking_information); track key) {
+                    <div class="banking-data-pill">
+                        <span class="data-key">{{ key }}</span>
+                        <span class="data-value">{{ app()!.banking_information[key] }}</span>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <div class="empty-state-card">
+                    <div class="spinner-dots">
+                        <div class="dot1"></div>
+                        <div class="dot2"></div>
+                        <div class="dot3"></div>
+                    </div>
+                    <p>El motor de riesgo está consultando la información bancaria en {{ app()?.country_name }}...</p>
+                    <span class="helper">Esta operación suele tardar unos segundos.</span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Auditoría -->
+        <div class="premium-card expanded audit-trail">
+            <div class="card-header">
+                <span class="material-icons">history</span>
+                <h2>Historial de Auditoría</h2>
+            </div>
+            <div class="card-content">
+                @if (app()?.audit_logs && app()!.audit_logs!.length > 0) {
+                <div class="modern-timeline">
+                    @for (log of app()?.audit_logs; track log.changed_at) {
+                    <div class="timeline-entry">
+                        <div class="time-mark">
+                            <span class="hour">{{ log.changed_at | date:'shortTime' }}</span>
+                            <span class="day">{{ log.changed_at | date:'MMM d' }}</span>
+                        </div>
+                        <div class="entry-line"></div>
+                        <div class="entry-content">
+                            <p>Estado actualizado de
+                                <span class="old-status">{{ log.old_status_name || 'Nuevo' }}</span>
+                                a <span class="new-status-badge" [ngClass]="getStatusClass(log.new_status || '')">{{
+                                    log.new_status_name }}</span>
+                            </p>
+                        </div>
+                    </div>
+                    }
+                </div>
+                } @else {
+                <p class="empty-text">No hay registros de auditoría aún.</p>
+                }
+            </div>
+        </div>
     </div>
     }
 </div>

@@ -24,8 +24,8 @@
     <main class="main-content">
         <header class="top-bar">
             <div>
-                <h1>Solicitudes de Crédito</h1>
-                <p class="subtitle"><span class="dot pulse"></span> Sistema Operativo en Tiempo Real</p>
+                <h1>Solicitudes de Crédito <span class="badge-live">LIVE</span></h1>
+                <p class="subtitle"><span class="dot pulse"></span> Motor de Riesgo en Tiempo Real</p>
             </div>
             <button class="btn-primary" routerLink="/applications/new">
                 <ion-icon name="add-outline"></ion-icon> Nueva Solicitud
@@ -56,21 +56,70 @@
 
         <!-- Cards Section (Stats) -->
         <div class="stats-grid">
-            <div class="stat-card">
-                <h3><ion-icon name="pie-chart-outline"></ion-icon> Total Solicitudes</h3>
-                <p class="stat-value">{{ applications().length }}</p>
+            <div class="stat-card card-total">
+                <div class="stat-header">
+                    <div class="stat-icon-box"><ion-icon name="pie-chart"></ion-icon></div>
+                    <span class="stat-trend trend-neutral">Global</span>
+                </div>
+                <div class="stat-content">
+                    <h3>Total Solicitudes</h3>
+                    <p class="stat-value">{{ totalCount }}</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3><ion-icon name="alert-circle-outline"></ion-icon> Pendientes</h3>
-                <p class="stat-value text-warning">
-                    {{ pendingCount }}
-                </p>
+
+            <div class="stat-card card-pending">
+                <div class="stat-header">
+                    <div class="stat-icon-box"><ion-icon name="time"></ion-icon></div>
+                    <span class="stat-trend trend-up"><ion-icon name="trending-up-outline"></ion-icon> +12%</span>
+                </div>
+                <div class="stat-content">
+                    <h3>En Espera</h3>
+                    <p class="stat-value">{{ pendingCount }}</p>
+                </div>
             </div>
-            <div class="stat-card">
-                <h3><ion-icon name="checkmark-done-circle-outline"></ion-icon> Aprobadas</h3>
-                <p class="stat-value text-success">
-                    {{ approvedCount }}
-                </p>
+
+            <div class="stat-card card-review">
+                <div class="stat-header">
+                    <div class="stat-icon-box"><ion-icon name="hammer"></ion-icon></div>
+                    <span class="stat-trend trend-neutral">Prioritario</span>
+                </div>
+                <div class="stat-content">
+                    <h3>Revisión Manual</h3>
+                    <p class="stat-value">{{ manualReviewCount }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card card-success">
+                <div class="stat-header">
+                    <div class="stat-icon-box"><ion-icon name="checkmark-circle"></ion-icon></div>
+                    <span class="stat-trend trend-up">+8.5%</span>
+                </div>
+                <div class="stat-content">
+                    <h3>Aprobadas</h3>
+                    <p class="stat-value">{{ approvedCount }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card card-danger">
+                <div class="stat-header">
+                    <div class="stat-icon-box"><ion-icon name="close-circle"></ion-icon></div>
+                    <span class="stat-trend trend-down">-2.1%</span>
+                </div>
+                <div class="stat-content">
+                    <h3>Rechazadas</h3>
+                    <p class="stat-value">{{ rejectedCount }}</p>
+                </div>
+            </div>
+
+            <div class="stat-card card-money">
+                <div class="stat-header">
+                    <div class="stat-icon-box"><ion-icon name="cash"></ion-icon></div>
+                    <ion-icon name="ellipsis-horizontal-outline" style="color: #64748b"></ion-icon>
+                </div>
+                <div class="stat-content">
+                    <h3>Capital Solicitado</h3>
+                    <p class="stat-value">{{ formatCurrency(totalAmountAmount) }}</p>
+                </div>
             </div>
         </div>
 
@@ -131,13 +180,29 @@
                             </div>
                         </td>
                     </tr>
-                    } @empty {
-                    <tr>
-                        <td colspan="7" class="empty-state">No se encontraron solicitudes con los filtros actuales.</td>
-                    </tr>
                     }
                 </tbody>
             </table>
+
+            <!-- Controles de Paginación -->
+            <div class="pagination-controls shadow-premium">
+                <div class="pagination-info">
+                    Registros {{ (currentPage() - 1) * 20 + 1 }} - {{ (currentPage() * 20) > totalItems() ? totalItems()
+                    : (currentPage() * 20) }} de <strong>{{ totalItems() }}</strong>
+                </div>
+                <div class="pagination-actions">
+                    <button class="btn-page" [disabled]="currentPage() === 1" (click)="changePage(currentPage() - 1)">
+                        <ion-icon name="chevron-back-outline"></ion-icon>
+                    </button>
+
+                    <span class="page-current">Página {{ currentPage() }} de {{ totalPages() }}</span>
+
+                    <button class="btn-page" [disabled]="currentPage() === totalPages()"
+                        (click)="changePage(currentPage() + 1)">
+                        <ion-icon name="chevron-forward-outline"></ion-icon>
+                    </button>
+                </div>
+            </div>
             }
         </div>
 

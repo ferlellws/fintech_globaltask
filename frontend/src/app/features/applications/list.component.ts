@@ -22,6 +22,21 @@ export class ListComponent implements OnInit {
   countries = signal<{ code: string, name: string }[]>([]);
   statuses = signal<{ code: string, name: string }[]>([]);
 
+  // Paginación
+  currentPage = signal(1);
+  totalPages = signal(1);
+  totalItems = signal(0);
+
+  // Estadísticas Globales
+  globalStats = signal({
+    total: 0,
+    pending: 0,
+    approved: 0,
+    rejected: 0,
+    manual_review: 0,
+    total_amount: 0
+  });
+
   constructor(
     private api: CreditApplicationService,
     private cable: ActionCableService,
@@ -35,26 +50,33 @@ export class ListComponent implements OnInit {
 
     // Escuchar actualizaciones en tiempo real
     this.cable.statusChanges.subscribe(update => {
-      this.applications.update(apps =>
-        apps.map(app => app.id === update.id ? {
-          ...app,
-          status: update.status,
-          status_name: (update as any).status_name || app.status_name,
-          updated_at: update.updated_at
-        } : app)
-      );
+      // Recargar aplicaciones para mantener consistencia con los totales
+      this.loadApplications();
     });
   }
 
   loadApplications() {
     this.loading.set(true);
-    this.api.getAll({ country: this.filterCountry(), status: this.filterStatus() }).subscribe({
+    this.api.getAll({
+      country: this.filterCountry(),
+      status: this.filterStatus(),
+      page: this.currentPage()
+    }).subscribe({
       next: (res) => {
         this.applications.set(res.data);
+        this.totalPages.set(res.meta.pages);
+        this.totalItems.set(res.meta.total);
+        this.globalStats.set(res.meta.global_stats);
         this.loading.set(false);
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  changePage(page: number) {
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+    this.loadApplications();
   }
 
   loadFilterOptions() {
@@ -63,6 +85,7 @@ export class ListComponent implements OnInit {
   }
 
   onFilterChange() {
+    this.currentPage.set(1);
     this.loadApplications();
   }
 
@@ -71,8 +94,7 @@ export class ListComponent implements OnInit {
       'pending': 'status-pending',
       'approved': 'status-approved',
       'rejected': 'status-rejected',
-      'manual_review': 'status-review',
-      'under_review': 'status-review'
+      'manual_review': 'status-review'
     };
     return map[status] || 'status-default';
   }
@@ -81,12 +103,28 @@ export class ListComponent implements OnInit {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   }
 
+  get totalCount(): number {
+    return this.globalStats().total;
+  }
+
   get pendingCount(): number {
-    return this.applications().filter(a => a.status === 'pending').length;
+    return this.globalStats().pending;
   }
 
   get approvedCount(): number {
-    return this.applications().filter(a => a.status === 'approved').length;
+    return this.globalStats().approved;
+  }
+
+  get rejectedCount(): number {
+    return this.globalStats().rejected;
+  }
+
+  get manualReviewCount(): number {
+    return this.globalStats().manual_review;
+  }
+
+  get totalAmountAmount(): number {
+    return this.globalStats().total_amount;
   }
 
   logout() {
