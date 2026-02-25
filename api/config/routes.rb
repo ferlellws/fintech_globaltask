@@ -20,7 +20,7 @@ Rails.application.routes.draw do
           get :statuses
         end
         member do
-          patch :status, to: "credit_applications#update_status"
+          patch :update_status
         end
       end
 

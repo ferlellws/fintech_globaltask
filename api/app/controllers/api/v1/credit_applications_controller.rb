@@ -22,7 +22,15 @@ module Api
             total: @pagy.count,
             page: @pagy.page,
             per_page: @pagy.limit,
-            pages: @pagy.pages
+            pages: @pagy.pages,
+            global_stats: {
+              total: CreditApplication.count,
+              pending: CreditApplication.where(status: "pending").count,
+              approved: CreditApplication.where(status: "approved").count,
+              rejected: CreditApplication.where(status: "rejected").count,
+              manual_review: CreditApplication.where(status: "manual_review").count,
+              total_amount: CreditApplication.sum(:requested_amount)
+            }
           }
         }
       end
@@ -104,7 +112,7 @@ module Api
           application_date: app.application_date,
           status: app.status,
           status_name: I18n.t("credit_applications.statuses.#{app.status}"),
-          banking_information: app.banking_information,
+          banking_information: app.translated_banking_information,
           created_at: app.created_at,
           updated_at: app.updated_at
         }
