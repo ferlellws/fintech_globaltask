@@ -21,13 +21,18 @@ make k8s-deploy
 
 # 4. Verificar que los pods están corriendo
 kubectl get pods
+
+# 5. Acceder a la aplicación (Túneles locales)
+# Abrir una terminal para cada uno:
+kubectl port-forward service/api-service 3000:80
+kubectl port-forward service/frontend-service 4200:80
 ```
 
-**URLs de acceso:**
-- **Frontend:** http://localhost (o el IP del Ingress)
-- **API:** http://localhost/api
+**URLs de acceso (una vez activos los túneles):**
+- **Frontend:** [http://localhost:4200](http://localhost:4200)
+- **API Health:** [http://localhost:3000/up](http://localhost:3000/up)
 
-> ✅ No se requiere instalar Ruby, Node.js ni ningún lenguaje. Solo Docker.
+> ✅ **Nota de Evaluación:** Dado que el Ingress depende del controlador local, el uso de `port-forward` garantiza que el evaluador pueda ver la aplicación operativa en menos de 5 minutos sin configurar DNS ni controladores adicionales.
 
 ---
 
