@@ -22,8 +22,8 @@ FROM nginx:alpine
 # Nota: Ajusta 'dist/frontend/browser' si el nombre del proyecto en angular.json es diferente
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
 
-# Copiar configuración personalizada de nginx si es necesario para SPA
-# RUN echo 'server { listen 80; location / { root /usr/share/nginx/html; index index.html; try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
+# Copiar configuración personalizada de nginx para soportar SPA
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
