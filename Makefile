@@ -1,10 +1,21 @@
 # Makefile para gestión del MVP Fintech
 
-.PHONY: setup start-api start-frontend stop build-images k8s-deploy help
+.PHONY: setup setup-credentials start-api start-frontend stop build-images k8s-deploy k8s-secrets help
 
-setup: ## Instalar dependencias de API y Frontend
+setup: setup-credentials ## Instalar dependencias de API y Frontend (genera credenciales si no existen)
 	@cd api && bundle install && bin/rails db:prepare
 	@cd frontend && npm install
+
+setup-credentials: ## Generar master.key y credenciales de Rails (ejecutar si no tienes master.key)
+	@if [ ! -f "api/config/master.key" ]; then \
+		echo "⚙️  Generando master.key y credenciales de Rails..."; \
+		openssl rand -hex 32 > api/config/master.key; \
+		SECRET_KEY=$$(openssl rand -hex 64) && \
+		cd api && RAILS_MASTER_KEY=$$(cat config/master.key) EDITOR="true" bundle exec rails credentials:edit && \
+		echo "✅ Credenciales generadas en api/config/master.key"; \
+	else \
+		echo "✅ master.key ya existe, no se requiere acción."; \
+	fi
 
 start-api: ## Iniciar el backend (API + Worker)
 	@echo "Iniciando API y Worker..."
