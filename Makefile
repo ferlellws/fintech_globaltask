@@ -27,8 +27,12 @@ build-images: ## Construir imágenes Docker (Simulado)
 	docker build -t fintech-frontend ./frontend
 
 k8s-secrets: ## Crear el secreto rails-secrets desde el master.key local
+	@if [ ! -f "$(CURDIR)/api/config/master.key" ]; then \
+		echo "Error: No se encuentra $(CURDIR)/api/config/master.key"; \
+		exit 1; \
+	fi
 	@echo "Creando secreto rails-secrets..."
-	@kubectl create secret generic rails-secrets --from-file=master-key=api/config/master.key --dry-run=client -o yaml | kubectl apply -f -
+	@kubectl create secret generic rails-secrets --from-file=master-key=$(CURDIR)/api/config/master.key --dry-run=client -o yaml | kubectl apply -f -
 
 k8s-deploy: k8s-secrets ## Desplegar a Kubernetes (Incluye creación de secretos)
 	kubectl apply -f k8s/postgres.yaml
