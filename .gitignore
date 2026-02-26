@@ -1,0 +1,30 @@
+# Sistema
+.DS_Store
+*.swp
+*~
+.apple
+.vscode/
+
+# API (Rails)
+/api/log/*
+/api/tmp/*
+/api/public/assets
+/api/public/packs
+/api/public/packs-test
+/api/node_modules
+/api/db/*.sqlite3
+/api/db/*.sqlite3-journal
+/api/storage/*
+!/api/storage/.keep
+
+# Frontend (Angular)
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.angular/
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Docker
+.dockerignore
+**/Dockerfile
