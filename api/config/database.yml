@@ -100,18 +100,19 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: fintech_globaltask_api_production
-    username: fintech_globaltask_api
-    password: <%= ENV["FINTECH_GLOBALTASK_API_DATABASE_PASSWORD"] %>
+    database: <%= ENV.fetch("POSTGRES_DB") { "fintech_globaltask_api_production" } %>
+    username: <%= ENV.fetch("POSTGRES_USER") { "postgres" } %>
+    password: <%= ENV.fetch("POSTGRES_PASSWORD") { "postgres_password" } %>
+    host: <%= ENV.fetch("DATABASE_HOST") { "postgres" } %>
   cache:
     <<: *primary_production
-    database: fintech_globaltask_api_production_cache
+    database: <%= ENV.fetch("POSTGRES_DB") { "fintech_globaltask_api_production" } %>_cache
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: fintech_globaltask_api_production_queue
+    database: <%= ENV.fetch("POSTGRES_DB") { "fintech_globaltask_api_production" } %>_queue
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: fintech_globaltask_api_production_cable
+    database: <%= ENV.fetch("POSTGRES_DB") { "fintech_globaltask_api_production" } %>_cable
     migrations_paths: db/cable_migrate
