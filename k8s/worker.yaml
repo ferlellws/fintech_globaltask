@@ -17,7 +17,7 @@ spec:
       containers:
       - name: solid-queue
         image: fintech-api:latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Never
         command: ["bin/jobs"]
         envFrom:
         - configMapRef:

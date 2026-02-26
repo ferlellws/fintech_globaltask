@@ -75,15 +75,12 @@ k8s/
 
 ### Comandos útiles
 
-```bash
-make build-images   # Construir imágenes Docker
-make k8s-deploy     # Desplegar/actualizar el stack completo
-make help           # Ver todos los comandos disponibles
-
-kubectl get pods              # Estado de los pods
-kubectl logs -l app=api       # Logs del backend
-kubectl logs -l app=worker    # Logs del worker
-```
+- `make build-images`: Construye las imágenes Docker.
+- `make k8s-deploy`: Despliega todo el stack.
+- `make help`: Ver todos los comandos disponibles.
+- `kubectl get pods`: Revisa el estado de salud.
+- `kubectl logs -l app=api`: Revisa los logs de la API.
+- `kubectl logs -l app=worker`: Revisa los logs del worker.
 
 ### Consideraciones especiales
 
