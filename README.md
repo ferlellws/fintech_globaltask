@@ -16,10 +16,10 @@ cd fintech_globaltask
 # 2. Construir imágenes y desplegar en Kubernetes
 make
 
-# 4. Verificar que los pods están corriendo
+# 3. Verificar que los pods están corriendo
 kubectl get pods -w
 
-# 5. Acceder a la aplicación (Túneles locales)
+# 4. Acceder a la aplicación (Túneles locales)
 # Abrir una terminal para cada uno:
 kubectl port-forward service/api-service 3000:80
 kubectl port-forward service/frontend-service 4200:80
@@ -33,20 +33,68 @@ kubectl port-forward service/frontend-service 4200:80
 
 ---
 
-## 🚀 Arquitectura Técnica
+## 🏗️ Supuestos y Consideraciones
 
-### Backend (Ruby on Rails 8 — API-Only)
-- **Patrón Strategy**: Lógica de validación específica por país (ES, PT, IT, MX, CO, BR).
-- **Solid Queue**: Procesamiento de evaluaciones de riesgo en background.
-- **Solid Cable**: Notificaciones en tiempo real vía WebSockets (ActionCable).
-- **Solid Cache**: Cache persistente en base de datos.
-- **PostgreSQL**: Múltiples schemas para datos primarios, colas y caché.
-- **Audit Logs**: Triggers de base de datos para registro automático de cambios.
+1. **Entorno de Ejecución**: Se asume un cluster de Kubernetes estándar (local o nube) con capacidad para volúmenes persistentes (PVC).
+2. **Moneda**: Los montos se manejan en la moneda local del país seleccionado, aunque para efectos de validación se asumen umbrales estandarizados.
+3. **Autenticación**: El sistema es abierto para registro de usuarios; no hay roles de administrador predefinidos en este MVP.
+4. **Validaciones Externas**: Las integraciones con burós de crédito (ej. Datacrédito, ASNEF) son simuladas (mocked) para garantizar la funcionalidad sin dependencias de terceros en la evaluación.
 
-### Frontend (Angular 19 — SPA)
-- **Signals**: Reactividad y estado optimizado.
-- **ActionCable Integration**: Actualización de estado en tiempo real sin recargar.
-- **UI Premium**: Tarjetas informativas y línea de tiempo de auditoría.
+---
+
+## 📊 Modelo de Datos
+
+El esquema de base de datos está diseñado para ser robusto y auditable:
+
+- **Users**: Gestión de identidad (email, password_digest).
+- **CreditApplications**: Núcleo del sistema.
+  - `amount`: Monto solicitado.
+  - `country_code`: ISO code (ES, MX, CO, etc.).
+  - `status`: Máquina de estados (`pending`, `analyzing`, `approved`, `rejected`, `manual_review`).
+  - `document_id`: Identificador nacional único.
+- **AuditLogs**: Tabla de auditoría inmutable que registra cambios de estado y eventos críticos.
+- **Solid Queue / Cache / Cable**: Tablas internas de Rails 8 para manejo de colas, caché y websockets, eliminando la necesidad de Redis.
+
+---
+
+## 💡 Decisiones Técnicas
+
+### Backend: Ruby on Rails 8 (API-Only)
+- **Patrón Strategy**: Se implementó para desacoplar las reglas de negocio de cada país. Agregar un nuevo país solo requiere crear una nueva clase Strategy sin tocar el controlador principal.
+- **Solid Stack (Queue, Cache, Cable)**: Se eligió la nueva pila por defecto de Rails 8 para simplificar la infraestructura. Al usar PostgreSQL para todo, reducimos la complejidad operativa y los costos de mantenimiento (no se necesita Redis).
+- **Service Objects**: La lógica compleja (integración bancaria, evaluación de riesgo) se encapsula en servicios para mantener los controladores "delgados".
+
+### Frontend: Angular 19
+- **Signals**: Se utiliza el nuevo sistema de reactividad de Angular para un manejo de estado más eficiente y predecible que `RxJS` en casos simples.
+- **Componentes Standalone**: Arquitectura moderna sin `NgModules` para reducir el boilerplate.
+- **Nginx**: Servidor web ligero optimizado para servir la SPA y manejar el enrutamiento del lado del cliente.
+
+---
+
+## 🔒 Consideraciones de Seguridad
+
+1. **Autenticación Stateless (JWT)**: Uso de JSON Web Tokens para autenticación, permitiendo escalabilidad horizontal sin sesiones en servidor.
+2. **Secret Management**: Las credenciales sensibles (DB password, Secret Key Base) se inyectan como Variables de Entorno en Kubernetes, no hardcodeadas.
+3. **Validación de Datos**: Strong Parameters en Rails y validaciones de formulario en Angular para prevenir inyección de datos maliciosos.
+4. **CORS Configurado**: Política estricta para permitir peticiones solo desde el origen del frontend confiable.
+5. **Auditoría**: Registro inmutable de todas las decisiones de crédito para trazabilidad y cumplimiento normativo.
+
+---
+
+## 📈 Análisis de Escalabilidad y Volumetría
+
+El sistema está diseñado para escalar ante altos volúmenes de solicitudes:
+
+### 1. Procesamiento Asíncrono (Solid Queue)
+Las evaluaciones de crédito pesadas se envían a un worker en segundo plano. Esto libera el hilo principal de la API para seguir recibiendo solicitudes (alta concurrencia) sin bloquearse mientras se procesan reglas complejas.
+
+### 2. Escalado Horizontal (Kubernetes)
+- **API Stateless**: Al no depender de sesiones en memoria, se pueden levantar múltiples réplicas (pods) de la API (`replicas: 2` en `api.yaml`) tras un Load Balancer.
+- **Workers Independientes**: El procesamiento de trabajos (`worker.yaml`) escala independientemente de la API web. Si la cola crece, se aumentan solo los workers.
+
+### 3. Base de Datos (PostgreSQL)
+- **Índices**: Se han añadido índices en columnas de búsqueda frecuente (`status`, `user_id`, `created_at`) para mantener consultas rápidas a medida que crece la tabla.
+- **Particionamiento (Futuro)**: El diseño permite migrar fácilmente a particionamiento por país o fecha si el volumen de datos alcanza millones de registros.
 
 ---
 
