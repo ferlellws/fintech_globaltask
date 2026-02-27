@@ -127,6 +127,35 @@ curl -X POST http://localhost:3000/api/v1/webhooks/bank_update \
 ```
 *Al ejecutarlo, verás cómo la solicitud #1 cambia a 'Aprobada' en el Dashboard de Angular instantáneamente vía WebSockets.*
 
+#### Sincronización Manual de Auditoría (Emergency Path)
+Si por alguna razón el trigger de base de datos no se activa mediante las migraciones automáticas, ejecuta este comando para forzar su creación manualmente en el cluster:
+
+```bash
+kubectl exec -it $(kubectl get pods -l app=api -o jsonpath='{.items[0].metadata.name}') -- bin/rails runner "ActiveRecord::Base.connection.execute <<-SQL
+  CREATE OR REPLACE FUNCTION log_credit_application_status_change()
+  RETURNS TRIGGER AS \$\$
+  BEGIN
+    IF (TG_OP = 'INSERT') THEN
+      INSERT INTO audit_logs (credit_application_id, old_status, new_status, created_at, updated_at)
+      VALUES (NEW.id, NULL, NEW.status, NOW(), NOW());
+    ELSIF (TG_OP = 'UPDATE') THEN
+      IF (OLD.status IS DISTINCT FROM NEW.status) THEN
+        INSERT INTO audit_logs (credit_application_id, old_status, new_status, created_at, updated_at)
+        VALUES (NEW.id, OLD.status, NEW.status, NOW(), NOW());
+      END IF;
+    END IF;
+    RETURN NEW;
+  END;
+  \$\$ LANGUAGE plpgsql;
+
+  DROP TRIGGER IF EXISTS trg_audit_credit_application_status ON credit_applications;
+  CREATE TRIGGER trg_audit_credit_application_status
+  AFTER INSERT OR UPDATE ON credit_applications
+  FOR EACH ROW
+  EXECUTE FUNCTION log_credit_application_status_change();
+SQL"
+```
+
 ---
 
 ## Despliegue en Kubernetes (Requisito 4.8)
