@@ -23,14 +23,16 @@ module Api
             page: @pagy.page,
             per_page: @pagy.limit,
             pages: @pagy.pages,
-            global_stats: {
-              total: CreditApplication.count,
-              pending: CreditApplication.where(status: "pending").count,
-              approved: CreditApplication.where(status: "approved").count,
-              rejected: CreditApplication.where(status: "rejected").count,
-              manual_review: CreditApplication.where(status: "manual_review").count,
-              total_amount: CreditApplication.sum(:requested_amount)
-            }
+            global_stats: Rails.cache.fetch("global_stats/#{CreditApplication.maximum(:updated_at).to_i}", expires_in: 1.minute) do
+              {
+                total: CreditApplication.count,
+                pending: CreditApplication.where(status: "pending").count,
+                approved: CreditApplication.where(status: "approved").count,
+                rejected: CreditApplication.where(status: "rejected").count,
+                manual_review: CreditApplication.where(status: "manual_review").count,
+                total_amount: CreditApplication.sum(:requested_amount)
+              }
+            end
           }
         }
       end
@@ -74,15 +76,20 @@ module Api
 
       # GET /api/v1/credit_applications/countries
       def countries
-        render json: { data: Countries::StrategyFactory.supported_countries }
+        data = Rails.cache.fetch("supported_countries", expires_in: 24.hours) do
+          Countries::StrategyFactory.supported_countries
+        end
+        render json: { data: data }
       end
 
       # GET /api/v1/credit_applications/statuses
       def statuses
-        translated_statuses = CreditApplication::VALID_STATUSES.map do |s|
-          { code: s, name: I18n.t("credit_applications.statuses.#{s}") }
+        data = Rails.cache.fetch("application_statuses", expires_in: 24.hours) do
+          CreditApplication::VALID_STATUSES.map do |s|
+            { code: s, name: I18n.t("credit_applications.statuses.#{s}") }
+          end
         end
-        render json: { data: translated_statuses }
+        render json: { data: data }
       end
 
       private
