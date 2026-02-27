@@ -1,6 +1,10 @@
 # Makefile para gestión del MVP Fintech
 
-.PHONY: build-images k8s-deploy help
+.DEFAULT_GOAL := all
+
+.PHONY: all build-images k8s-deploy help
+
+all: build-images k8s-deploy ## Construir imágenes y desplegar en Kubernetes
 
 build-images: ## Construir imágenes Docker localmente
 	docker build -t fintech-api ./api
