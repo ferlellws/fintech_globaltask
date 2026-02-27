@@ -127,6 +127,28 @@ curl -X POST http://localhost:3000/api/v1/webhooks/bank_update \
 ```
 *Al ejecutarlo, verás cómo la solicitud #1 cambia a 'Aprobada' en el Dashboard de Angular instantáneamente vía WebSockets.*
 
+---
+
+---
+
+## Catálogo de Datos de Prueba para Evaluación 🏅
+
+Utilice los siguientes datos para probar las validaciones y reglas de negocio de la API en cada país soportado. 
+
+| País | Identificador | Dato Válido (Aprobado/Pendiente) | Error de Validación (Formato) | Escenario de Rechazo (Negocio) |
+|---|---|---|---|---|
+| **España (ES)** | DNI | `12345678Z` | `12345678A` (Letra incorrecta) | Solicitar monto > 50,000 |
+| **Portugal (PT)** | NIF | `501234560` | `123456789` (Formato inválido) | Ingreso < 10% del monto |
+| **Italia (IT)** | Codice Fiscale | `MRARSS80A01H501Z` | `ABC123XYZ` (Formato corto) | Ingreso proyectado insuficiente |
+| **México (MX)** | CURP | `AAAA000000HAAAAAA0` | `INVALID123` (Formato inválido) | Mensualidad > 40% del ingreso |
+| **Colombia (CO)** | Cédula (CC) | `12345678` | `123` (Longitud inválida) | Deuda simulada > 50% ingreso |
+| **Brasil (BR)** | CPF | `12345678909` | `11111111111` (Dígitos repetidos) | Score financiero < 500 |
+
+> [!TIP]
+> Para los casos de **Éxito**, asegúrese de proporcionar un `monthly_income` generoso y un `requested_amount` moderado. Para los casos de **Rechazo**, invierta estos valores siguiendo las reglas descritas en la tabla.
+
+---
+
 #### Sincronización Manual de Auditoría (Emergency Path)
 Si por alguna razón el trigger de base de datos no se activa mediante las migraciones automáticas, ejecuta este comando para forzar su creación manualmente en el cluster:
 
