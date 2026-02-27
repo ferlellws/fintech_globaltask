@@ -50,13 +50,13 @@ export class ListComponent implements OnInit {
 
     // Escuchar actualizaciones en tiempo real
     this.cable.statusChanges.subscribe(update => {
-      // Recargar aplicaciones para mantener consistencia con los totales
-      this.loadApplications();
+      // Recargar aplicaciones de forma silenciosa (sin bloquear la UI)
+      this.loadApplications(true);
     });
   }
 
-  loadApplications() {
-    this.loading.set(true);
+  loadApplications(silent = false) {
+    if (!silent) this.loading.set(true);
     this.api.getAll({
       country: this.filterCountry(),
       status: this.filterStatus(),
