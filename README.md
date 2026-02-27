@@ -88,9 +88,29 @@ El esquema de base de datos está diseñado para ser robusto y auditable:
 
 ---
 
-## Análisis de Escalabilidad y Volumetría
+## Análisis de Escalabilidad y Rendimiento 🏅
 
-El sistema está diseñado para escalar ante altos volúmenes de solicitudes:
+El sistema ha sido diseñado para manejar un alto volumen de solicitudes (millones de registros) manteniendo la velocidad y estabilidad sin comprometer la experiencia del usuario.
+
+### 1. Estrategia de Índices (Indexación Inteligente)
+Para optimizar las consultas de búsqueda y agregación, se han definido y recomiendan los siguientes índices:
+- **Búsqueda Identidad**: Índices únicos en `(country, identity_document)` para garantizar integridad y búsquedas rápidas de duplicados.
+- **Filtrado por Estado**: Índice en `status` y `updated_at` para optimizar el dashboard y las colas de procesamiento.
+- **Relaciones**: Índices en llaves foráneas (`user_id`, `credit_application_id`) para acelerar los `JOINs` con la tabla de auditoría.
+- **Índice Compuesto Crítico**: Se recomienda un índice `(status, created_at DESC)` para la consulta principal de "Solicitudes Recientes", evitando el `Full Table Scan`.
+
+### 2. Crecimiento y Particionamiento
+El diseño permite que la base de datos crezca de forma ordenada y escalable mediante:
+- **Particionamiento**: Es una estrategia que nos permite dividir la información en "piezas" más pequeñas (por país o por fecha). Esto evita que una sola tabla se vuelva demasiado pesada, manteniendo la agilidad incluso con millones de registros.
+- **Gestión de Históricos**: Se consideran estrategias de archivado para mover registros antiguos a almacenamientos de largo plazo, asegurando que el sistema operativo diario siempre esté ligero.
+
+### 3. Consultas y Cuellos de Botella
+- **Carga Selectiva**: El sistema solo solicita la información estrictamente necesaria de la base de datos en cada consulta.
+- **Dashboard Optimizado**: El tablero de estadísticas utiliza una memoria temporal (caché) que solo se actualiza cuando hay cambios reales, ahorrando recursos críticos del servidor.
+
+---
+
+## Escalado Operativo y Concurrencia
 
 ### 1. Procesamiento Asíncrono (Solid Queue)
 Las evaluaciones de crédito pesadas se envían a un worker en segundo plano. Esto libera el hilo principal de la API para seguir recibiendo solicitudes (alta concurrencia) sin bloquearse mientras se procesan reglas complejas.
@@ -98,9 +118,6 @@ Las evaluaciones de crédito pesadas se envían a un worker en segundo plano. Es
 ### 2. Escalado Horizontal (Kubernetes)
 - **API Stateless**: Al no depender de sesiones en memoria, se pueden levantar múltiples réplicas (pods) de la API (`replicas: 2` en `api.yaml`) tras un Load Balancer.
 - **Workers Independientes**: El procesamiento de trabajos (`worker.yaml`) escala independientemente de la API web. Si la cola crece, se aumentan solo los workers.
-
-### 3. Base de Datos (PostgreSQL)
-- **Particionamiento (Futuro)**: El diseño permite migrar fácilmente a particionamiento por país o fecha si el volumen de datos alcanza millones de registros.
 
 ### Pruebas de Estrés y Concurrencia
 Para validar la capacidad del sistema de procesar múltiples solicitudes en paralelo, se ha incluido un script de simulación que genera tráfico de forma masiva:
