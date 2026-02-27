@@ -60,8 +60,16 @@ El esquema de base de datos está diseñado para ser robusto y auditable:
 ### Backend: Ruby on Rails 8 (API-Only)
 - **Patrón Strategy**: Se implementó para desacoplar las reglas de negocio de cada país. Agregar un nuevo país solo requiere crear una nueva clase Strategy sin tocar el controlador principal.
 - **Solid Stack (Queue, Cache, Cable)**: Se eligió la nueva pila por defecto de Rails 8 para simplificar la infraestructura. Al usar PostgreSQL para todo, reducimos la complejidad operativa y los costos de mantenimiento (no se necesita Redis).
-- **Service Objects**: La lógica compleja (integración bancaria, evaluación de riesgo) se encapsula en servicios para mantener los controladores "delgados".
+- **Colas y Trabajo Asíncrono (Requisito 4.6)**: 
+  - **Tecnología**: Se utiliza **Solid Queue**, donde los trabajos se persisten en tablas de PostgreSQL, garantizando durabilidad y consistencia sin dependencias externas.
+  - **Producción**: Al crear una solicitud (`CreditApplication`), el modelo dispara un callback `after_create_commit` que encola el `RiskEvaluationJob.perform_later`.
+  - **Consumo**: Existe un proceso separado (**Worker**) definido en el cluster (ver `k8s/worker.yaml`) que ejecuta `bin/jobs`, encargado de procesar las colas de forma paralela y escalable.
+- **Service Objects**: La lógica compleja (integración bancaria, evaluación de riesgo) se encapsula en servicios para mantener los controladores "limpios".
 - **Estrategia de Webhooks**: Se implementó un endpoint de entrada (`/api/v1/webhooks/bank_update`) que permite integraciones asíncronas con entidades financieras. El sistema valida el `application_id` y actualiza el estado de la solicitud en tiempo real, disparando notificaciones automáticas vía WebSockets a los clientes conectados.
+- **Caching (Requisito 4.7)**: Se incorporó una estrategia de caché multinivel:
+  - **Catálogos (Países/Estados)**: Almacenamiento en caché por 24 horas para reducir la carga en la lógica de negocio.
+  - **Estadísticas Globales**: Caché dinámica basada en un `cache_key` que incluye el timestamp del último registro actualizado (`maximum(:updated_at)`). Esto garantiza que el dashboard se invalide automáticamente solo cuando hay nuevos datos, optimizando las consultas de agregación (`COUNT`, `SUM`).
+  - **Infraestructura**: Uso de **Thruster** para aceleración de activos y compresión de archivos.
 
 ### Frontend: Angular 21 — SPA
 - **Signals**: Se utiliza el nuevo sistema de reactividad de Angular para un manejo de estado más eficiente y predecible que `RxJS` en casos simples.
@@ -101,7 +109,23 @@ Para validar la capacidad del sistema de procesar múltiples solicitudes en para
 # Ejecutar simulación de 10 solicitudes aleatorias desde el cluster
 kubectl exec -it $(kubectl get pods -l app=api -o jsonpath='{.items[0].metadata.name}') -- bin/rails runner bin/stress_test.rb 10
 ```
-*Este comando dispara 50 solicitudes con datos válidos (DNI, NIF, CPF, etc.) y lógica de aprobación/rechazo aleatoria para todos los países.*
+*Este comando dispara solicitudes con datos válidos (DNI, NIF, CPF, etc.) y lógica de aprobación/rechazo aleatoria para todos los países.*
+
+#### Simulación de Integración Externa (Webhooks)
+Para simular un "callback" desde un banco externo que actualiza el estado de una solicitud en tiempo real:
+
+```bash
+curl -X POST http://localhost:3000/api/v1/webhooks/bank_update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "webhook": {
+      "application_id": 1,
+      "status": "approved",
+      "event": "manual_override"
+    }
+  }'
+```
+*Al ejecutarlo, verás cómo la solicitud #1 cambia a 'Aprobada' en el Dashboard de Angular instantáneamente vía WebSockets.*
 
 ---
 
