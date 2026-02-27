@@ -13,14 +13,11 @@ Sistema de solicitudes de crédito internacional con validaciones específicas p
 git clone https://github.com/ferlellws/fintech_globaltask.git
 cd fintech_globaltask
 
-# 2. Construir las imágenes Docker
-make build-images
-
-# 3. Desplegar todo el stack en Kubernetes
-make k8s-deploy
+# 2. Construir imágenes y desplegar en Kubernetes
+make
 
 # 4. Verificar que los pods están corriendo
-kubectl get pods
+kubectl get pods -w
 
 # 5. Acceder a la aplicación (Túneles locales)
 # Abrir una terminal para cada uno:
