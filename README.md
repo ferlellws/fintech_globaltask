@@ -98,8 +98,8 @@ Las evaluaciones de crédito pesadas se envían a un worker en segundo plano. Es
 Para validar la capacidad del sistema de procesar múltiples solicitudes en paralelo, se ha incluido un script de simulación que genera tráfico de forma masiva:
 
 ```bash
-# Ejecutar simulación de 50 solicitudes aleatorias desde el cluster
-kubectl exec -it $(kubectl get pods -l app=api -o jsonpath='{.items[0].metadata.name}') -- bin/rails runner bin/stress_test.rb 50
+# Ejecutar simulación de 10 solicitudes aleatorias desde el cluster
+kubectl exec -it $(kubectl get pods -l app=api -o jsonpath='{.items[0].metadata.name}') -- bin/rails runner bin/stress_test.rb 10
 ```
 *Este comando dispara 50 solicitudes con datos válidos (DNI, NIF, CPF, etc.) y lógica de aprobación/rechazo aleatoria para todos los países.*
 

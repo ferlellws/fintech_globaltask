@@ -19,7 +19,7 @@ spec:
         image: fintech-api:latest
         imagePullPolicy: Never
         ports:
-        - containerPort: 3000
+        - containerPort: 80
         envFrom:
         - configMapRef:
             name: app-config
@@ -35,7 +35,7 @@ spec:
         readinessProbe:
           httpGet:
             path: /up
-            port: 3000
+            port: 80
           initialDelaySeconds: 15
           periodSeconds: 10
           timeoutSeconds: 5
@@ -48,6 +48,6 @@ spec:
   type: ClusterIP
   ports:
   - port: 80
-    targetPort: 3000
+    targetPort: 80
   selector:
     app: api
