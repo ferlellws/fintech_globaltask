@@ -128,9 +128,6 @@ class CreditApplication < ApplicationRecord
     RiskEvaluationJob.perform_later(id)
   end
 
-
-  private
-
   def enqueue_notification
     ExternalNotificationJob.perform_later(id)
   end

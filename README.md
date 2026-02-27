@@ -92,14 +92,17 @@ El esquema de base de datos está diseñado para ser robusto y auditable:
 
 El sistema ha sido diseñado para manejar un alto volumen de solicitudes (millones de registros) manteniendo la velocidad y estabilidad sin comprometer la experiencia del usuario.
 
-### 1. Estrategia de Índices (Indexación Inteligente)
-Para optimizar las consultas de búsqueda y agregación, se han definido y recomiendan los siguientes índices:
-- **Búsqueda Identidad**: Índices únicos en `(country, identity_document)` para garantizar integridad y búsquedas rápidas de duplicados.
-- **Filtrado por Estado**: Índice en `status` y `updated_at` para optimizar el dashboard y las colas de procesamiento.
-- **Relaciones**: Índices en llaves foráneas (`user_id`, `credit_application_id`) para acelerar los `JOINs` con la tabla de auditoría.
-- **Índice Compuesto Crítico**: Se recomienda un índice `(status, created_at DESC)` para la consulta principal de "Solicitudes Recientes", evitando el `Full Table Scan`.
+### 1. Sistema de Auditoría Automática (Trigger)
+Para garantizar la inmutabilidad de los datos, la aplicación cuenta con un Trigger nativo en PostgreSQL (ver migración `20260220215617`). 
+Cada vez que una solicitud se crea o cambia de estado, la función `log_credit_application_status_change()` inserta automáticamente el historial en `audit_logs`. Esto asegura que incluso cambios manuales en base de datos queden registrados.
 
-### 2. Crecimiento y Particionamiento
+### 2. Estrategia de Índices (Indexación Implementada)
+Para optimizar las consultas de búsqueda y agregación en producción, se implementaron los siguientes índices de alto rendimiento:
+- **Índice Compuesto Crítico**: `(status, created_at DESC)` (`idx_credit_apps_status_created_at`). Optimiza radicalmente el dashboard de administración filtrando rápidamente por estado y entregando los registros ya ordenados cronológicamente sin consumo adicional de memoria.
+- **Índice Único Parcial**: `(country, identity_document)` donde `status = 'pending'` (`idx_unique_pending_credit_apps`). Actúa como una regla de negocio inflexible que impide mediante un bloqueo de motor que un mismo usuario tenga múltiples solicitudes en proceso al mismo tiempo, garantizando la integridad de datos bajo concurrencia extrema.
+- **Relaciones**: Índices en llaves foráneas (`user_id`, `credit_application_id`) para acelerar los `JOINs` con la tabla de auditoría.
+
+### 3. Crecimiento y Escalabilidad Futura
 El diseño permite que la base de datos crezca de forma ordenada y escalable mediante:
 - **Particionamiento**: Es una estrategia que nos permite dividir la información en "piezas" más pequeñas (por país o por fecha). Esto evita que una sola tabla se vuelva demasiado pesada, manteniendo la agilidad incluso con millones de registros.
 - **Gestión de Históricos**: Se consideran estrategias de archivado para mover registros antiguos a almacenamientos de largo plazo, asegurando que el sistema operativo diario siempre esté ligero.

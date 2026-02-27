@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_23_223910) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_27_185800) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,9 +37,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_23_223910) do
     t.bigint "user_id", null: false
     t.index ["application_date"], name: "index_credit_applications_on_application_date"
     t.index ["banking_information"], name: "index_credit_applications_on_banking_information", using: :gin
+    t.index ["country", "identity_document"], name: "idx_unique_pending_credit_apps", unique: true, where: "((status)::text = 'pending'::text)"
     t.index ["country", "status"], name: "idx_credit_apps_country_status"
     t.index ["country"], name: "index_credit_applications_on_country"
     t.index ["created_at"], name: "index_credit_applications_on_created_at"
+    t.index ["status", "created_at"], name: "idx_credit_apps_status_created_at", order: { created_at: :desc }
     t.index ["status"], name: "index_credit_applications_on_status"
     t.index ["user_id"], name: "index_credit_applications_on_user_id"
   end
