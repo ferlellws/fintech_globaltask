@@ -2,7 +2,9 @@
 
 # If running the rails server or worker then create or migrate existing database
 if [[ "${*}" == *"./bin/rails server"* ]] || [[ "${*}" == *"bin/jobs"* ]]; then
-  ./bin/rails db:prepare
+  echo "Preparando bases de datos..."
+  ./bin/rails db:create || true
+  ./bin/rails db:migrate
 fi
 
 exec "${@}"
